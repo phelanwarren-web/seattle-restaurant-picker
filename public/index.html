@@ -4,6 +4,368 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Seattle Eats — Group Restaurant Picker</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --salmon: #E8624A; --salmon-light: #FAEAE7; --salmon-dark: #C44830;
+      --pine: #1A3A2E; --pine-mid: #2D6B52; --sage: #4A8A6F;
+      --cream: #FAF7F2; --warm-gray: #8C8075;
+      --text: #1C1612; --text-light: #6B6059;
+      --white: #FFFFFF; --border: rgba(28,22,18,0.12);
+    }
+    body { font-family: 'DM Sans', sans-serif; background: var(--cream); color: var(--text); min-height: 100vh; }
+    .header { background: var(--pine); padding: 1.5rem 1.25rem 1.25rem; text-align: center; }
+    .header-eyebrow { font-size: 11px; font-weight: 500; letter-spacing: 0.12em; text-transform: uppercase; color: var(--sage); margin-bottom: 0.4rem; }
+    .header h1 { font-family: 'Syne', sans-serif; font-size: clamp(1.6rem, 7vw, 2.2rem); font-weight: 800; color: var(--white); line-height: 1.1; }
+    .header h1 span { color: var(--salmon); }
+    .header-sub { font-size: 14px; color: rgba(255,255,255,0.6); margin-top: 0.5rem; }
+    .page { padding: 1.5rem 1.25rem; max-width: 480px; margin: 0 auto; }
+    .page-title { font-family: 'Syne', sans-serif; font-size: 1.4rem; font-weight: 700; margin-bottom: 0.5rem; }
+    .page-desc { color: var(--text-light); font-size: 15px; line-height: 1.6; margin-bottom: 1.75rem; }
+    .card { background: var(--white); border-radius: 16px; padding: 1.5rem; margin-bottom: 1rem; border: 1px solid var(--border); }
+    .card-icon { font-size: 1.5rem; margin-bottom: 0.75rem; }
+    .card h3 { font-family: 'Syne', sans-serif; font-size: 1rem; font-weight: 700; margin-bottom: 0.3rem; }
+    .card p { font-size: 14px; color: var(--text-light); line-height: 1.5; margin-bottom: 1rem; }
+    .btn { display: flex; align-items: center; justify-content: center; gap: 8px; padding: 0.75rem 1.5rem; border-radius: 50px; border: none; cursor: pointer; font-family: 'DM Sans', sans-serif; font-size: 15px; font-weight: 500; width: 100%; transition: opacity 0.15s; }
+    .btn:disabled { opacity: 0.6; cursor: not-allowed; }
+    .btn-primary { background: var(--salmon); color: var(--white); }
+    .btn-primary:hover:not(:disabled) { background: var(--salmon-dark); }
+    .btn-outline { background: transparent; color: var(--pine); border: 1.5px solid var(--pine); }
+    .btn-outline:hover { background: rgba(26,58,46,0.06); }
+    .btn-pine { background: var(--pine); color: var(--white); }
+    .join-row { display: flex; gap: 8px; margin-top: 0.75rem; }
+    .join-row input { flex: 1; padding: 0.7rem 1rem; border: 1.5px solid var(--border); border-radius: 50px; font-family: 'DM Sans', sans-serif; font-size: 15px; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; outline: none; color: var(--text); background: var(--cream); }
+    .join-row input:focus { border-color: var(--pine); }
+    .error-msg { color: #C44830; font-size: 13px; margin-top: 0.5rem; min-height: 1.2em; }
+    .session-code-box { background: var(--pine); border-radius: 16px; padding: 1.5rem; text-align: center; margin-bottom: 1.25rem; }
+    .session-code-label { font-size: 12px; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase; color: rgba(255,255,255,0.5); margin-bottom: 0.5rem; }
+    .session-code { font-family: 'Syne', sans-serif; font-size: 3rem; font-weight: 800; color: var(--white); letter-spacing: 0.15em; }
+    .session-url { font-size: 12px; color: rgba(255,255,255,0.5); margin-top: 0.5rem; word-break: break-all; }
+    .copy-btn { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; color: rgba(255,255,255,0.7); background: rgba(255,255,255,0.12); border: none; border-radius: 50px; padding: 6px 14px; cursor: pointer; margin-top: 0.75rem; }
+    .copy-btn:hover { background: rgba(255,255,255,0.2); color: white; }
+    .vote-counter { display: flex; align-items: center; justify-content: space-between; background: var(--white); border-radius: 12px; padding: 1rem 1.25rem; margin-bottom: 1rem; border: 1px solid var(--border); }
+    .vote-counter-label { font-size: 14px; color: var(--text-light); }
+    .vote-counter-num { font-family: 'Syne', sans-serif; font-size: 1.5rem; font-weight: 700; color: var(--salmon); }
+    .progress-wrap { height: 4px; background: rgba(28,22,18,0.1); border-radius: 2px; margin-bottom: 1.75rem; }
+    .progress-bar { height: 100%; background: var(--salmon); border-radius: 2px; transition: width 0.3s ease; }
+    .q-number { font-size: 12px; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase; color: var(--warm-gray); margin-bottom: 0.5rem; }
+    .q-text { font-family: 'Syne', sans-serif; font-size: 1.35rem; font-weight: 700; line-height: 1.25; margin-bottom: 1.5rem; }
+    .options-grid { display: grid; gap: 10px; }
+    .option-btn { display: flex; align-items: center; gap: 12px; padding: 1rem 1.25rem; background: var(--white); border: 1.5px solid var(--border); border-radius: 14px; cursor: pointer; font-family: 'DM Sans', sans-serif; font-size: 15px; color: var(--text); text-align: left; width: 100%; }
+    .option-btn:hover { border-color: var(--salmon); background: var(--salmon-light); }
+    .option-btn.selected { border-color: var(--salmon); background: var(--salmon-light); color: var(--salmon-dark); font-weight: 500; }
+    .option-emoji { font-size: 1.3rem; flex-shrink: 0; }
+    .quiz-nav { display: flex; gap: 10px; margin-top: 1.5rem; }
+    .quiz-nav .btn { flex: 1; }
+    .results-header { text-align: center; margin-bottom: 1.5rem; }
+    .results-header h2 { font-family: 'Syne', sans-serif; font-size: 1.6rem; font-weight: 800; margin-bottom: 0.25rem; }
+    .results-header p { color: var(--text-light); font-size: 14px; }
+    .restaurant-card { background: var(--white); border-radius: 16px; padding: 1.25rem; margin-bottom: 0.75rem; border: 1px solid var(--border); display: flex; gap: 1rem; align-items: flex-start; }
+    .restaurant-card.top { border-color: var(--salmon); }
+    .rank { font-family: 'Syne', sans-serif; font-size: 1.4rem; font-weight: 800; color: var(--border); flex-shrink: 0; width: 36px; text-align: center; line-height: 1; padding-top: 2px; }
+    .rank.first { color: var(--salmon); }
+    .restaurant-info { flex: 1; min-width: 0; }
+    .restaurant-name { font-family: 'Syne', sans-serif; font-size: 1.05rem; font-weight: 700; margin-bottom: 0.35rem; }
+    .restaurant-neighborhood { font-size: 12px; color: var(--warm-gray); margin-bottom: 0.5rem; }
+    .tags { display: flex; flex-wrap: wrap; gap: 6px; }
+    .tag { font-size: 11px; font-weight: 500; padding: 3px 10px; border-radius: 50px; background: var(--cream); color: var(--text-light); border: 1px solid var(--border); }
+    .match-score { font-size: 12px; font-weight: 500; color: var(--pine-mid); background: rgba(45,107,82,0.1); padding: 3px 10px; border-radius: 50px; }
+    .center-screen { display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 3rem 1.25rem; max-width: 480px; margin: 0 auto; }
+    .big-emoji { font-size: 4rem; margin-bottom: 1rem; }
+    .center-screen h2 { font-family: 'Syne', sans-serif; font-size: 1.4rem; font-weight: 700; margin-bottom: 0.5rem; }
+    .center-screen p { color: var(--text-light); font-size: 15px; line-height: 1.6; margin-bottom: 1.5rem; }
+    .divider { border: none; border-top: 1px solid var(--border); margin: 1rem 0; }
+  </style>
+</head>
+<body>
+
+<header class="header">
+  <p class="header-eyebrow">Seattle</p>
+  <h1>where should we <span>eat?</span></h1>
+  <p class="header-sub">Group restaurant voting — no signup needed</p>
+</header>
+
+<!-- HOME -->
+<div id="view-home" style="display:block">
+  <div class="page">
+    <h2 class="page-title">Pick a restaurant everyone will love</h2>
+    <p class="page-desc">One person starts a session, everyone votes anonymously, and the best Seattle restaurants rise to the top.</p>
+    <div class="card">
+      <div class="card-icon">🍽️</div>
+      <h3>Start a session</h3>
+      <p>You'll get a 6-letter code to share with your group. Everyone votes privately — no names attached.</p>
+      <button id="btn-create" class="btn btn-primary" onclick="startSession()">Create a session</button>
+      <p class="error-msg" id="create-error"></p>
+    </div>
+    <div class="card">
+      <div class="card-icon">🔑</div>
+      <h3>Join a session</h3>
+      <p>Got a code from someone? Enter it here to add your vote.</p>
+      <div class="join-row">
+        <input type="text" id="join-code" placeholder="ABC123" maxlength="6" />
+        <button class="btn btn-pine" style="width:auto;padding:0.7rem 1.2rem" onclick="joinSession()">Join</button>
+      </div>
+      <p class="error-msg" id="join-error"></p>
+    </div>
+  </div>
+</div>
+
+<!-- HOST -->
+<div id="view-host" style="display:none">
+  <div class="page">
+    <div class="session-code-box">
+      <p class="session-code-label">Share this code</p>
+      <div class="session-code" id="display-code">——</div>
+      <p class="session-url" id="display-url"></p>
+      <button class="copy-btn" onclick="copyLink()">📋 Copy link</button>
+    </div>
+    <div class="vote-counter">
+      <span class="vote-counter-label">⏳ Waiting for votes…</span>
+      <span class="vote-counter-num" id="host-vote-count">0</span>
+    </div>
+    <p style="font-size:13px;color:var(--text-light);text-align:center;margin-bottom:1rem">Once your group has voted, reveal the results.</p>
+    <button class="btn btn-primary" onclick="getResults()" style="margin-bottom:0.75rem">See results</button>
+    <button class="btn btn-outline" onclick="showView('view-home')">Back to home</button>
+  </div>
+</div>
+
+<!-- QUIZ -->
+<div id="view-quiz" style="display:none">
+  <div class="page">
+    <div class="progress-wrap"><div class="progress-bar" id="quiz-progress" style="width:0%"></div></div>
+    <p class="q-number" id="q-number"></p>
+    <h2 class="q-text" id="q-text"></h2>
+    <div class="options-grid" id="q-options"></div>
+    <div class="quiz-nav">
+      <button class="btn btn-outline" id="btn-back" onclick="quizBack()" style="display:none">Back</button>
+      <button class="btn btn-primary" id="btn-next" onclick="quizNext()">Next</button>
+    </div>
+  </div>
+</div>
+
+<!-- SUBMITTED -->
+<div id="view-submitted" style="display:none">
+  <div class="center-screen">
+    <div class="big-emoji">🥂</div>
+    <h2>Vote submitted!</h2>
+    <p>Your answer is anonymous. Tell the host when everyone's done so they can reveal the results.</p>
+    <button class="btn btn-outline" onclick="showView('view-home')" style="max-width:260px">Back to home</button>
+  </div>
+</div>
+
+<!-- RESULTS -->
+<div id="view-results" style="display:none">
+  <div class="page">
+    <div class="results-header">
+      <h2>🗺️ Top picks</h2>
+      <p id="results-vote-count"></p>
+    </div>
+    <div id="results-list"></div>
+    <hr class="divider" />
+    <button class="btn btn-outline" onclick="showView('view-home')">Start a new session</button>
+  </div>
+</div>
+
+<script>
+const QUESTIONS = [
+  { key:'mealTime', text:'What meal are we having?', options:[
+    {label:'Breakfast',value:'breakfast',emoji:'🥞'},
+    {label:'Lunch',value:'lunch',emoji:'🥗'},
+    {label:'Dinner',value:'dinner',emoji:'🍷'},
+    {label:'Snacks',value:'snacks',emoji:'🧀'},
+    {label:'Drinks',value:'drinks',emoji:'🍹'}
+  ]},
+  { key:'genre', text:'What cuisine sounds good?', options:[
+    {label:'Mexican',value:'mexican',emoji:'🌮'},
+    {label:'Italian',value:'italian',emoji:'🍝'},
+    {label:'Seafood',value:'seafood',emoji:'🦀'},
+    {label:'Asian',value:'asian',emoji:'🍜'},
+    {label:'American',value:'american',emoji:'🍔'},
+    {label:'Surprise me',value:'not sure',emoji:'🎲'}
+  ]},
+  { key:'type', text:"What's the vibe?", options:[
+    {label:'Low key',value:'low key',emoji:'😌'},
+    {label:'Somewhat fancy',value:'somewhat fancy',emoji:'✨'},
+    {label:'Fancy',value:'fancy',emoji:'🎩'},
+    {label:'Kid friendly',value:'child friendly',emoji:'👶'}
+  ]},
+  { key:'location', text:'Where in Seattle?', options:[
+    {label:'Walkable Seattle neighborhood',value:'walkable',emoji:'🚶'},
+    {label:'Not walkable / drive needed',value:'not walkable',emoji:'🚗'},
+    {label:'Eastside (Bellevue/Redmond)',value:'eastside',emoji:'🌉'}
+  ]},
+  { key:'feature', text:'Any special feature?', options:[
+    {label:'Nice view',value:'nice view',emoji:'🌅'},
+    {label:'Happy hour',value:'happy hour',emoji:'🍺'},
+    {label:'Themed',value:'themed',emoji:'🎭'},
+    {label:'No preference',value:'none',emoji:'🤷'}
+  ]}
+];
+
+let currentSession = null;
+let quizStep = 0;
+let quizAnswers = {};
+let hostPollInterval = null;
+
+function showView(id) {
+  ['view-home','view-host','view-quiz','view-submitted','view-results'].forEach(function(v) {
+    document.getElementById(v).style.display = 'none';
+  });
+  document.getElementById(id).style.display = 'block';
+}
+
+async function startSession() {
+  var btn = document.getElementById('btn-create');
+  var errEl = document.getElementById('create-error');
+  btn.textContent = 'Creating…';
+  btn.disabled = true;
+  errEl.textContent = '';
+  try {
+    var res = await fetch('/api/sessions', { method:'POST', headers:{'Content-Type':'application/json'} });
+    if (!res.ok) throw new Error('Server error ' + res.status);
+    var data = await res.json();
+    if (!data.sessionId) throw new Error('No session ID returned');
+    currentSession = data.sessionId;
+    document.getElementById('display-code').textContent = currentSession;
+    document.getElementById('display-url').textContent = location.origin + '?join=' + currentSession;
+    showView('view-host');
+    startHostPolling();
+  } catch(err) {
+    errEl.textContent = 'Could not create session: ' + err.message;
+    btn.textContent = 'Create a session';
+    btn.disabled = false;
+  }
+}
+
+function startHostPolling() {
+  if (hostPollInterval) clearInterval(hostPollInterval);
+  hostPollInterval = setInterval(async function() {
+    try {
+      var res = await fetch('/api/sessions/' + currentSession);
+      var data = await res.json();
+      document.getElementById('host-vote-count').textContent = data.voteCount;
+    } catch(e) {}
+  }, 3000);
+}
+
+async function joinSession() {
+  var code = document.getElementById('join-code').value.trim().toUpperCase();
+  var errEl = document.getElementById('join-error');
+  if (!code || code.length < 4) { errEl.textContent = 'Please enter a valid session code.'; return; }
+  errEl.textContent = '';
+  try {
+    var res = await fetch('/api/sessions/' + code);
+    if (!res.ok) throw new Error('not found');
+    currentSession = code;
+    startQuiz();
+  } catch(e) {
+    errEl.textContent = 'Session not found. Check the code and try again.';
+  }
+}
+
+function startQuiz() {
+  quizStep = 0;
+  quizAnswers = {};
+  renderQuestion();
+  showView('view-quiz');
+}
+
+function renderQuestion() {
+  var q = QUESTIONS[quizStep];
+  document.getElementById('quiz-progress').style.width = (quizStep / QUESTIONS.length * 100) + '%';
+  document.getElementById('q-number').textContent = 'Question ' + (quizStep + 1) + ' of ' + QUESTIONS.length;
+  document.getElementById('q-text').textContent = q.text;
+  var grid = document.getElementById('q-options');
+  grid.innerHTML = '';
+  q.options.forEach(function(opt) {
+    var btn = document.createElement('button');
+    btn.className = 'option-btn' + (quizAnswers[q.key] === opt.value ? ' selected' : '');
+    btn.innerHTML = '<span class="option-emoji">' + opt.emoji + '</span>' + opt.label;
+    btn.onclick = function() {
+      quizAnswers[q.key] = opt.value;
+      grid.querySelectorAll('.option-btn').forEach(function(b) { b.classList.remove('selected'); });
+      btn.classList.add('selected');
+    };
+    grid.appendChild(btn);
+  });
+  document.getElementById('btn-back').style.display = quizStep > 0 ? 'inline-flex' : 'none';
+  document.getElementById('btn-next').textContent = quizStep === QUESTIONS.length - 1 ? 'Submit vote ✓' : 'Next';
+}
+
+function quizBack() {
+  if (quizStep > 0) { quizStep--; renderQuestion(); }
+}
+
+async function quizNext() {
+  var q = QUESTIONS[quizStep];
+  if (!quizAnswers[q.key]) return;
+  if (quizStep < QUESTIONS.length - 1) { quizStep++; renderQuestion(); return; }
+  try {
+    var res = await fetch('/api/sessions/' + currentSession + '/vote', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify(quizAnswers)
+    });
+    if (res.ok) { showView('view-submitted'); }
+    else { alert('Something went wrong. Please try again.'); }
+  } catch(e) { alert('Network error. Please try again.'); }
+}
+
+async function getResults() {
+  if (hostPollInterval) clearInterval(hostPollInterval);
+  try {
+    var res = await fetch('/api/sessions/' + currentSession + '/results');
+    var data = await res.json();
+    var list = document.getElementById('results-list');
+    list.innerHTML = '';
+    document.getElementById('results-vote-count').textContent = 'Based on ' + data.voteCount + ' vote' + (data.voteCount !== 1 ? 's' : '');
+    if (!data.results || data.results.length === 0) {
+      list.innerHTML = '<p style="text-align:center;color:var(--text-light);padding:2rem">No matches found — try different preferences!</p>';
+    } else {
+      var max = data.results[0].score;
+      var medals = ['🥇','🥈','🥉'];
+      data.results.forEach(function(r, i) {
+        var pct = max > 0 ? Math.round(r.score / max * 100) : 0;
+        var card = document.createElement('div');
+        card.className = 'restaurant-card' + (i === 0 ? ' top' : '');
+        var tags = [].concat(r.genre, r.type, [r.location[0]]).filter(Boolean).map(function(t) { return '<span class="tag">'+t+'</span>'; }).join('');
+        card.innerHTML = '<div class="rank ' + (i === 0 ? 'first' : '') + '">' + (medals[i] || (i+1)) + '</div>'
+          + '<div class="restaurant-info">'
+          + '<div class="restaurant-name">' + r.name + '</div>'
+          + '<div class="restaurant-neighborhood">📍 ' + r.neighborhood + '</div>'
+          + '<div class="tags">' + tags + '<span class="match-score">' + pct + '% match</span></div>'
+          + '</div>';
+        list.appendChild(card);
+      });
+    }
+    showView('view-results');
+  } catch(e) { alert('Could not load results. Please try again.'); }
+}
+
+function copyLink() {
+  navigator.clipboard.writeText(location.origin + '?join=' + currentSession).then(function() {
+    var btn = document.querySelector('.copy-btn');
+    btn.textContent = '✅ Copied!';
+    setTimeout(function() { btn.textContent = '📋 Copy link'; }, 2000);
+  });
+}
+
+window.addEventListener('DOMContentLoaded', function() {
+  var joinCode = new URLSearchParams(location.search).get('join');
+  if (joinCode) {
+    document.getElementById('join-code').value = joinCode;
+    joinSession();
+  }
+});
+</script>
+</body>
+</html><!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Seattle Eats — Group Restaurant Picker</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
   <style>
